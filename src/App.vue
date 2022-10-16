@@ -1,30 +1,62 @@
 <template>
-  <nav>
-    <router-link to="/">Home</router-link> |
-    <router-link to="/about">About</router-link>
-  </nav>
-  <router-view/>
+	<div class="container">
+		<form class="card" @submit.prevent="submit">
+			<h1>Auth</h1>
+			
+			<div class="form-control" :class="{invalid: !form.email.valid && form.email.touched}">
+				<label for="email">Email</label>
+				<input type="email" id="email" v-model="form.email.value" @blur="form.email.blur">
+				<small v-if="form.email.errors.required && form.email.touched">Email field is required</small>
+			</div>
+			
+			<div class="form-control" :class="{invalid: !form.password.valid && form.password.touched}">
+				<label for="password">Password</label>
+				<input type="password" id="password" v-model="form.password.value" @blur="form.password.blur">
+				<small v-if="form.password.errors.required && form.password.touched">Password field is required</small>
+				<small v-else-if="form.password.errors.minLength && form.password.touched">Password length can't be less then 8. Now it's {{ form.password.value.length }}</small>
+			</div>
+			
+			<button class="btn primary" type="submit" :disabled="!form.valid">Submit</button>
+		</form>
+		
+		<Suspense>
+			<UsersList v-if="submitted"></UsersList>
+		</Suspense>
+	</div>
 </template>
 
-<style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-}
+<script>
+import UsersList from "@/components/UsersList";
+import {useForm} from "@/use/form";
+import {ref} from "vue";
 
-nav {
-  padding: 30px;
-}
+const required = val => !!val;
+const minLength = num => val => val.length >= num;
 
-nav a {
-  font-weight: bold;
-  color: #2c3e50;
+export default {
+	components: {UsersList},
+	setup() {
+		const submitted = ref(false);
+		
+		const form = useForm({
+			email: {
+				value: '',
+				validators: {required}
+			},
+			password: {
+				value: '',
+				validators: {required, minLength: minLength(8)}
+			}
+		});
+		
+		const submit = () => {
+			console.log('Email:', form.email.value);
+			console.log('Password:', form.password.value);
+			
+			submitted.value = true;
+		};
+		
+		return {form, submit, submitted};
+	},
 }
-
-nav a.router-link-exact-active {
-  color: #42b983;
-}
-</style>
+</script>
